@@ -1,4 +1,4 @@
 [workspace]
 resolver = "3"
-members = ["crates/db","crates/grpc-pki","crates/grpc-service", "crates/orchestrator", "crates/policy-distributor", "crates/proto", "crates/result-ingester","crates/server-core"]
+members = ["crates/db","crates/grpc-service", "crates/orchestrator", "crates/pki", "crates/policy-distributor", "crates/proto", "crates/result-ingester","crates/server-core"]
 
