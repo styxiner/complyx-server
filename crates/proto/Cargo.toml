@@ -3,4 +3,17 @@ name = "proto"
 version = "0.1.0"
 edition = "2024"
 
+[features]
+default = []
+client = []
+server = []
+
 [dependencies]
+#prost = { version = "0.13", features = ["derive"] }
+prost = "0.13"
+serde = { version = "1", features = ["derive"] }
+tonic = { version = "0.12", features = ["tls"] }
+
+[build-dependencies]
+prost-build = "0.13"
+tonic-build = { version = "0.12.3", features = ["prost"] }

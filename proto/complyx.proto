@@ -1,0 +1,105 @@
+syntax = "proto3";
+package complyx;
+
+service ComplyxAgent {
+  // El agente hace poll para obtener el bundle de politicas.
+  // Si el bundle no cambia desde el ultimo poll, el server devuelve un bundle vacio y el cambiado a false
+  rpc PollPolicies(PollRequest) returns (PollResponse);
+
+  // El agente envia los resultados de los checks ejecutados
+  rpc SubmitResults(SubmitResultsRequest) returns (SubmitResultsResponse);
+
+  // Heartbeat independiente al poll. Permite al orquestrador sabber q el agente está vivo aunque no haya cambio en politicas
+  rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
+}
+
+service ComplyxEnroll {
+  // Envia CSR y token de enrooll. Servidor valida y devuelve firma los certificados y claves con la CA
+  rpc Enroll(EnrollRequest) returns (EnrollResponse);
+}
+
+message PollRequest {
+  string agent_id = 1;
+  string policy_bundle_hash = 2; // Para evitar la retransmisión de políticas de forma innecesaria
+}
+
+message PollResponse {
+  bool policies_changed = 1;
+  PolicyBundle bundle = 2;
+}
+
+message PolicyBundle {
+  repeated Policy policies = 1;
+  string bundle_hash = 2;
+}
+
+message Policy {
+  string id = 1;
+  string name = 2;
+  string version = 3;
+  string severity = 4;
+  repeated PolicyElement elements = 5;
+}
+
+message PolicyElement {
+  string id = 1;
+  string name = 2;
+  repeated PolicyCheck checks = 3;
+}
+
+message PolicyCheck {
+  string id = 1;
+  string name = 2;
+  string check_type = 3;
+  string check_params_json = 4;
+  repeated string regulation_section_ids = 5;
+  PolicyRemediation remediation = 6;
+}
+
+message PolicyRemediation {
+  string id = 1;
+  string remediation_type = 2;
+  string remediation_params_json = 3;
+}
+
+message SubmitResultsRequest {
+  string agent_id = 1;
+  repeated CheckResult results = 2;
+}
+
+message CheckResult {
+  string check_id = 1;
+  bool passed = 2;
+  string detail = 3;
+  int64 executed_at = 4; // timestamp unix
+  string actual_value = 5;
+  string expected_value = 6;
+}
+
+message SubmitResultsResponse {
+  bool accepted = 1;
+  uint32 accepted_count = 2;
+  uint32 rejected_count = 3;
+}
+
+message HeartbeatRequest {
+  string agent_id = 1;
+  int64 timestamp = 2;
+}
+
+message HeartbeatResponse {
+  int64 server_timestamp = 1;
+}
+
+message EnrollRequest {
+  string token = 1;
+  string csr_pem = 2;
+  string hostname = 3;
+  string os_name = 4;
+  string os_version = 5;
+}
+
+message EnrollResponse {
+  string cert_pem = 1;
+  string ca_cert_pem = 2;
+}
