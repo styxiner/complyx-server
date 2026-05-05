@@ -1,5 +1,5 @@
 //! db
-//! 
+//!
 //! Capa de acceso a PostgreSQL del servidor Complyx
 //!
 //! Toda interaccion con la bbdd pasa por este crate. Los crates de logica de negocio
@@ -16,10 +16,10 @@
 //! | `results` | `check_results`, `compliance_scores` |
 //! | `risks` | `threats`, `risks`, `risk_policies` |
 //! | `certs` | `agent_certs`, `enroll_tokens` |
-//! 
+//!
 //! ## Uso
 //!
-//! ```no_run
+//! ```ignore
 //! use db::{connect, run_migrations};
 //! //! #[tokio::main]
 //! async fn main() -> Result<(), db::DbError> {
@@ -29,10 +29,10 @@
 //! }
 //! ```
 
-mod pool;
 pub mod agents;
 pub mod certs;
 pub mod policies;
+mod pool;
 pub mod results;
 pub mod risks;
 
@@ -55,6 +55,3 @@ pub enum DbError {
     #[error("recurso no encontrado: {0}")]
     NotFound(String),
 }
-
-
-

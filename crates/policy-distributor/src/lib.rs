@@ -1,14 +1,33 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+//! Resuelve y reconstruye el `PolicyBundle` proto para cada agente.
+//!
+//! Combina politicas asignadas directamente al agente con las asignadas as sus grupos,
+//! deduplicada, carga los detalles completos de cada politica y constriye el bundle proto listo
+//! para enviar en `PollResponse`
+//!
+//!
+//! # Uso
+//! ```ignore
+//! use policy_distributor::PolicyDistributor;
+//! use std::sync::Arc;
+//!
+//! let distributor = PolicyDistributor::new(Arc::new(pool));
+//!
+//! // En el servicio gRPC, al recibir un PollRequest:
+//! let bundle = distributor.resolve_for_agent(agent_id).await?;
+//!
+//! // Comparar con el hash que el agente tiene en caché:
+//! if bundle.bundle_hash != req.policy_bundle_hash {
+//!     // Enviar el bundle completo
+//! } else {
+//!     // Responder con policies_changed = false
+//! }
+//! ```
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+mod hasher;
+mod resolver;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
+#[derive(Debug, thiserror::Error)]
+pub enum DistributorError {
+    #[error("error de la base de datos: {0}")]
+    Database(#[from] db::DbError),
 }
