@@ -17,10 +17,10 @@ use db::PgPool;
 use db::results as db_results;
 use proto::CheckResult;
 
-use crate::scorer::ComplianceScorer;
-use crate::risk_trigger::RiskTrigger;
-use crate::validator::{Self, TimestampBounds};
 use crate::IngesterError;
+use crate::risk_trigger::RiskTrigger;
+use crate::scorer::ComplianceScorer;
+use crate::validator::{self, TimestampBounds};
 
 #[derive(Debug, Default)]
 pub struct IngestSummary {
@@ -57,8 +57,13 @@ impl ResultIngester {
     // * `results`: resultados del `SubmitResultsRequest`
     // * `check_severities`: mapa check_id con severidad para el `risk_trigger`. Puede estar vacio:
     // en ese caso no se crean riesgos automaticamente.
-    
-    pub async fn ingest(&self, agent_id: Uuid, results: Vec<CheckResult>, check_severities: HashMap<String, String>) -> Result<IngestSummary, IngesterError> {
+
+    pub async fn ingest(
+        &self,
+        agent_id: Uuid,
+        results: Vec<CheckResult>,
+        check_severities: HashMap<String, String>,
+    ) -> Result<IngestSummary, IngesterError> {
         let pool = &*self.pool;
         let mut summary = IngestSummary::default();
 
@@ -73,19 +78,15 @@ impl ResultIngester {
         );
 
         // Validar
-        let report = validator::validate_batch(
-            pool,
-            agent_id,
-            &results,
-            &self.timestamp_bounds,
-        )
-        .await?
+        let report =
+            validator::validate_batch(pool, agent_id, &results, &self.timestamp_bounds).await?;
 
         summary.rejected = report.rejected.len();
 
-
         for r in &report.rejected {
-            summary.rejection_reasons.insert(r.check_id.clone(), r.reason.clone());
+            summary
+                .rejection_reasons
+                .insert(r.check_id.clone(), r.reason.clone());
             tracing::warn!(
                 agent_id = %agent_id,
                 check_id = %r.check_id,
@@ -117,13 +118,13 @@ impl ResultIngester {
                 executed_at_unix: r.executed_at,
             })
             .collect();
- 
+
         let inserted = db_results::insert_check_results(pool, &to_insert)
             .await
             .map_err(IngesterError::Database)?;
- 
+
         summary.accepted = inserted;
- 
+
         tracing::debug!(
             agent_id = %agent_id,
             inserted,
@@ -135,13 +136,14 @@ impl ResultIngester {
         summary.scores_updated = self.scorer.recalculate(agent_id).await?;
 
         // Disparador de riesgos
-        let risk_summary = self.risk_trigger
+        let risk_summary = self
+            .risk_trigger
             .evaluate(agent_id, &report.valid, &check_severities)
             .await?;
- 
+
         summary.risks_created = risk_summary.created;
         summary.risks_closed = risk_summary.closed;
- 
+
         tracing::info!(
             agent_id = %agent_id,
             accepted = summary.accepted,
@@ -159,7 +161,7 @@ impl ResultIngester {
 #[cfg(test)]
 mod tests {
     use super::*;
- 
+
     #[test]
     fn ingest_summary_default_is_zeroed() {
         let s = IngestSummary::default();
@@ -168,4 +170,3 @@ mod tests {
         assert!(s.rejection_reasons.is_empty());
     }
 }
-

@@ -108,7 +108,7 @@ pub async fn validate_batch(
 
     // Validar que los check_ids pertenecen al agente en la bbdd
     let invalid_ids =
-        db_results::validate_check_ids_for_agent(pool, &agent_id, &candidate_check_ids)
+        db_results::validate_check_ids_for_agent(pool, agent_id, &candidate_check_ids)
             .await
             .map_err(IngesterError::Database)?;
 
