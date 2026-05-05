@@ -705,6 +705,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "grpc-pki"
+version = "0.1.0"
+dependencies = [
+ "db",
+ "pki",
+ "proto",
+ "rustls",
+ "rustls-pemfile",
+ "thiserror 1.0.69",
+ "tokio",
+ "tokio-rustls",
+ "tonic",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
 name = "grpc-service"
 version = "0.1.0"
 
