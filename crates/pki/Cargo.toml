@@ -6,12 +6,19 @@ edition = "2024"
 [dependencies]
 
 db = { path = "../db" }
+sqlx = { version = "0.8", features = ["postgres"] }
+ipnetwork = "0.20"
 
-rcgen = { version = "0.13", features = ["pem"] }
+rcgen = { version = "0.14.7", features = ["pem", "x509-parser"] }
 x509-parser = "0.16"
 pem = "3"
 
+base64 = "0.22"
+
+tempfile = "3.27.0"
+
 tokio = { version = "1", features = ["fs", "sync"] }
+tonic = { version = "0.12", features = ["tls"] }
 
 uuid = { version = "1", features = ["v4"] }
 chrono = { version = "0.4", features = ["serde"] }

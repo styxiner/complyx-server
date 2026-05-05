@@ -35,6 +35,8 @@ pub mod revoke;
 pub mod store;
 pub mod token;
 
+//use ipnetwork::IpNetwork;
+
 pub use ca::CertificateAuthority;
 
 #[derive(Debug, thiserror::Error)]
@@ -69,6 +71,9 @@ pub enum PkiError {
 
     #[error("error de base de datos: {0}")]
     Database(#[from] db::DbError),
+
+    #[error("Ip inválida: {0}")]
+    InvalidIp(String),
 }
 
 // Convierte `PkiError` en un código de estado gRPC para los servicios. Se usa en `grpc-service`
@@ -76,20 +81,23 @@ pub enum PkiError {
 impl From<PkiError> for tonic::Status {
     fn from(e: PkiError) -> Self {
         match e {
-            PkiError::TokenInvalid
-            | PkiError::TokenAlreadyUsed
-            | PkiError::TokenExpired => tonic::Status::unauthenticated(e.to_string()),
+            PkiError::TokenInvalid | PkiError::TokenAlreadyUsed | PkiError::TokenExpired => {
+                tonic::Status::unauthenticated(e.to_string())
+            }
 
-            PkiError::CsrParse(_)
-            | PkiError::CsrSignatureInvalid(_) => tonic::Status::invalid_argument(e.to_string()),
+            PkiError::CsrParse(_) | PkiError::CsrSignatureInvalid(_) => {
+                tonic::Status::invalid_argument(e.to_string())
+            }
 
             PkiError::AgentNotFound(_) => tonic::Status::not_found(e.to_string()),
 
-            PkiError::CertGeneration(_)
-            | PkiError::Io { .. }
-            | PkiError::Database(_) => {
+            PkiError::CertGeneration(_) | PkiError::Io { .. } | PkiError::Database(_) => {
                 tracing::error!(error = %e, "error interno en PKI");
                 tonic::Status::internal("error interno del servidor")
+            }
+
+            PkiError::InvalidIp(_) => {
+                tonic::Status::invalid_argument("Ip inválida en el certificado")
             }
         }
     }

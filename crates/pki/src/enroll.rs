@@ -13,9 +13,11 @@ use sqlx::PgPool;
 
 use db::{agents as db_agents, certs as db_certs};
 
+use ipnetwork::IpNetwork;
+
+use crate::PkiError;
 use crate::ca::CertificateAuthority;
 use crate::token;
-use crate::PkiError;
 
 #[derive(Debug, Clone)]
 pub struct EnrollRequest {
@@ -44,7 +46,12 @@ pub struct EnrollResult {
 // * `PkiError::CsrSignatureInvalid` — la firma del CSR no es válida.
 // * `PkiError::CertGeneration` — error al firmar el certificado.
 // * `PkiError::Database` — error al acceder a la BD.
-pub async fn process_enroll(pool: &PgPool, ca: &CertificateAuthority, req: &EnrollRequest, cert_validity_days: i64,) -> Result<EnrollResult, PkiError> {
+pub async fn process_enroll(
+    pool: &PgPool,
+    ca: &CertificateAuthority,
+    req: &EnrollRequest,
+    cert_validity_days: i64,
+) -> Result<EnrollResult, PkiError> {
     tracing::info!(
         hostname = %req.hostname,
         os_name  = %req.os_name,
@@ -61,7 +68,10 @@ pub async fn process_enroll(pool: &PgPool, ca: &CertificateAuthority, req: &Enro
     let agent_id = db_agents::upsert_agent(
         pool,
         &db_agents::UpsertAgentData {
-            ip: req.remote_ip.clone(),
+            ip: req
+                .remote_ip
+                .parse::<IpNetwork>()
+                .map_err(|e| PkiError::InvalidIp(e.to_string()))?,
             hostname: Some(req.hostname.clone()),
             os_name: Some(req.os_name.clone()),
             os_version: Some(req.os_version.clone()),

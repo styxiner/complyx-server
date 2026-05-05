@@ -93,7 +93,7 @@ pub async fn list_revoked_serials(pool: &PgPool) -> Result<Vec<RevokedCert>, Pki
 pub struct RevokedCert {
     pub agent_id: Uuid,
     pub serial: String,
-    pub revoked_at: chrono::DateTime<chrono::Utc>,
+    pub revoked_at: chrono::NaiveDateTime,
 }
 
 #[cfg(test)]
@@ -106,7 +106,7 @@ mod tests {
         let r = RevokedCert {
             agent_id: Uuid::new_v4(),
             serial: "deadbeef".into(),
-            revoked_at: now,
+            revoked_at: now.naive_utc(),
         };
         assert_eq!(r.serial, "deadbeef");
     }

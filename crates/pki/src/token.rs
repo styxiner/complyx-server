@@ -32,7 +32,11 @@ pub struct GeneratedToken {
 //
 // * `hostname_hint` — hostname del endpoint al que está destinado (solo informativo).
 // * `expiry_hours` — cuántas horas es válido el token (defecto: 24h).
-pub async fn generate(pool: &PgPool, hostname_hint: Option<&str>, expiry_hours: i64,) -> Result<GeneratedToken, PkiError> {
+pub async fn generate(
+    pool: &PgPool,
+    hostname_hint: Option<&str>,
+    expiry_hours: i64,
+) -> Result<GeneratedToken, PkiError> {
     let token = format!(
         "{}{}",
         hex::encode(Uuid::new_v4().as_bytes()),
@@ -42,7 +46,7 @@ pub async fn generate(pool: &PgPool, hostname_hint: Option<&str>, expiry_hours: 
     let token_hash = hash_token(&token);
     let expires_at = Utc::now() + Duration::hours(expiry_hours);
 
-    db_certs::save_enroll_token(pool, &token_hash, hostname_hint, expires_at)
+    db_certs::save_enroll_token(pool, &token_hash, hostname_hint, expires_at.naive_utc())
         .await
         .map_err(PkiError::Database)?;
 
@@ -73,7 +77,10 @@ pub async fn generate(pool: &PgPool, hostname_hint: Option<&str>, expiry_hours: 
 // * `PkiError::TokenInvalid` — el token no existe.
 // * `PkiError::TokenAlreadyUsed` — el token ya fue consumido.
 // * `PkiError::TokenExpired` — el token expiró.
-pub async fn validate_and_consume(pool: &PgPool, token_plain: &str,) -> Result<db::certs::EnrollTokenRow, PkiError> {
+pub async fn validate_and_consume(
+    pool: &PgPool,
+    token_plain: &str,
+) -> Result<db::certs::EnrollTokenRow, PkiError> {
     let token_hash = hash_token(token_plain);
 
     let row = db_certs::find_enroll_token(pool, &token_hash)
@@ -90,7 +97,7 @@ pub async fn validate_and_consume(pool: &PgPool, token_plain: &str,) -> Result<d
         return Err(PkiError::TokenAlreadyUsed);
     }
 
-    if Utc::now() > row.expires_at {
+    if Utc::now().naive_utc() > row.expires_at {
         tracing::warn!(
             token_id = %row.id,
             expired_at = %row.expires_at,

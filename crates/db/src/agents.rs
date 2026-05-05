@@ -13,13 +13,13 @@ use crate::DbError;
 #[derive(Debug, Clone)]
 pub struct AgentRow {
     pub id: Uuid,
-    pub ip: IpNetwork,
+    pub ip: String,
     pub hostname: Option<String>,
     pub os_name: Option<String>,
     pub os_version: Option<String>,
-//    pub install_date: DateTime<Utc>,
+    //    pub install_date: DateTime<Utc>,
     pub install_date: NaiveDateTime,
-//    pub latest_connection: DateTime<Utc>,
+    //    pub latest_connection: DateTime<Utc>,
     pub latest_connection: NaiveDateTime,
     pub enabled: bool,
 }
@@ -29,7 +29,7 @@ pub struct AgentGroupRow {
     pub id: Uuid,
     pub name: String,
     pub description: Option<String>,
-//    pub created_date: DateTime<Utc>,
+    //    pub created_date: DateTime<Utc>,
     pub created_date: NaiveDateTime,
 }
 
@@ -48,7 +48,7 @@ pub async fn get_agent(pool: &PgPool, id: Uuid) -> Result<Option<AgentRow>, DbEr
     sqlx::query_as!(
         AgentRow,
         r#"
-        SELECT id, ip AS "ip!", hostname, os_name, os_version, install_date, latest_connection, enabled
+        SELECT id, ip::text AS "ip!", hostname, os_name, os_version, install_date, latest_connection, enabled
         FROM agents
         WHERE id = $1
         "#,
@@ -80,13 +80,12 @@ pub async fn upsert_agent(pool: &PgPool, data: &UpsertAgentData) -> Result<Uuid,
         data.os_name,
         data.os_version,
     )
-        .fetch_one(pool)
-        .await
+    .fetch_one(pool)
+    .await
     .map_err(DbError::Query)?;
 
     Ok(row.id)
 }
-
 
 // Actualiza el timestamp `last_connection` de un agente. Se llama en cada heartbeat y en cada
 // poll.
@@ -99,14 +98,14 @@ pub async fn update_latest_connection(pool: &PgPool, agent_id: Uuid) -> Result<(
         "#,
         agent_id
     )
-        .execute(pool)
-        .await
+    .execute(pool)
+    .await
     .map_err(DbError::Query)?;
 
     Ok(())
 }
 
-// Habilita o deshabilita un agente 
+// Habilita o deshabilita un agente
 pub async fn set_enabled(pool: &PgPool, agent_id: Uuid, enabled: bool) -> Result<(), DbError> {
     sqlx::query!(
         r#"
@@ -117,8 +116,8 @@ pub async fn set_enabled(pool: &PgPool, agent_id: Uuid, enabled: bool) -> Result
         enabled,
         agent_id
     )
-        .execute(pool)
-        .await
+    .execute(pool)
+    .await
     .map_err(DbError::Query)?;
 
     Ok(())
@@ -133,8 +132,8 @@ pub async fn delete_agent(pool: &PgPool, agent_id: Uuid) -> Result<(), DbError> 
         "#,
         agent_id
     )
-        .execute(pool)
-        .await
+    .execute(pool)
+    .await
     .map_err(DbError::Query)?;
 
     Ok(())
@@ -144,7 +143,7 @@ pub async fn list_agents(pool: &PgPool) -> Result<Vec<AgentRow>, DbError> {
     sqlx::query_as!(
         AgentRow,
         r#"
-        SELECT id, ip AS "ip!", hostname, os_name, os_version, install_date, latest_connection, enabled
+        SELECT id, ip::text AS "ip!", hostname, os_name, os_version, install_date, latest_connection, enabled
         FROM agents 
         ORDER BY hostname, id 
         "#
@@ -156,7 +155,10 @@ pub async fn list_agents(pool: &PgPool) -> Result<Vec<AgentRow>, DbError> {
 
 // Grupos de los agentes
 
-pub async fn get_agent_groups(pool: &PgPool, agent_id: Uuid) -> Result<Vec<AgentGroupRow>, DbError> {
+pub async fn get_agent_groups(
+    pool: &PgPool,
+    agent_id: Uuid,
+) -> Result<Vec<AgentGroupRow>, DbError> {
     sqlx::query_as!(
         AgentGroupRow,
         r#"
@@ -168,8 +170,8 @@ pub async fn get_agent_groups(pool: &PgPool, agent_id: Uuid) -> Result<Vec<Agent
         "#,
         agent_id
     )
-        .fetch_all(pool)
-        .await
+    .fetch_all(pool)
+    .await
     .map_err(DbError::Query)
 }
 
@@ -182,14 +184,18 @@ pub async fn get_agent_group_ids(pool: &PgPool, agent_id: Uuid) -> Result<Vec<Uu
         "#,
         agent_id
     )
-        .fetch_all(pool)
-        .await
+    .fetch_all(pool)
+    .await
     .map_err(DbError::Query)?;
 
     Ok(rows.into_iter().map(|r| r.group_id).collect())
 }
 
-pub async fn add_agent_to_group(pool: &PgPool, agent_id: Uuid, group_id: Uuid) -> Result<(), DbError> {
+pub async fn add_agent_to_group(
+    pool: &PgPool,
+    agent_id: Uuid,
+    group_id: Uuid,
+) -> Result<(), DbError> {
     sqlx::query!(
         r#"
         INSERT INTO agent_group_membership (agent_id, group_id)
@@ -199,14 +205,18 @@ pub async fn add_agent_to_group(pool: &PgPool, agent_id: Uuid, group_id: Uuid) -
         agent_id,
         group_id
     )
-        .execute(pool)
-        .await
+    .execute(pool)
+    .await
     .map_err(DbError::Query)?;
 
     Ok(())
 }
 
-pub async fn remove_agent_from_group(pool: &PgPool, agent_id: Uuid, group_id: Uuid) -> Result<(), DbError> {
+pub async fn remove_agent_from_group(
+    pool: &PgPool,
+    agent_id: Uuid,
+    group_id: Uuid,
+) -> Result<(), DbError> {
     sqlx::query!(
         r#"
         DELETE 
@@ -216,8 +226,8 @@ pub async fn remove_agent_from_group(pool: &PgPool, agent_id: Uuid, group_id: Uu
         agent_id,
         group_id
     )
-        .execute(pool)
-        .await
+    .execute(pool)
+    .await
     .map_err(DbError::Query)?;
 
     Ok(())
@@ -233,8 +243,8 @@ pub async fn get_group(pool: &PgPool, id: Uuid) -> Result<Option<AgentGroupRow>,
         "#,
         id
     )
-        .fetch_optional(pool)
-        .await
+    .fetch_optional(pool)
+    .await
     .map_err(DbError::Query)
 }
 

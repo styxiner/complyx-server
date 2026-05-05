@@ -9,26 +9,34 @@ use chrono::Utc;
 use sqlx::PgPool;
 use uuid::Uuid;
 
-pub use db::certs::{AgentCertRow, EnrollTokenRow};
 use db::certs as db_certs;
+pub use db::certs::{AgentCertRow, EnrollTokenRow};
 
 use crate::PkiError;
 
 // Persiste el certificado emitido a un agente.
-pub async fn save_agent_cert(pool: &PgPool, agent_id: Uuid, cert_pem: &str, serial: &str,) -> Result<(), PkiError> {
+pub async fn save_agent_cert(
+    pool: &PgPool,
+    agent_id: Uuid,
+    cert_pem: &str,
+    serial: &str,
+) -> Result<(), PkiError> {
     db_certs::store_cert(pool, agent_id, cert_pem, serial)
         .await
         .map_err(PkiError::Database)
 }
 
 // Obtiene el certificado de un agente.
-pub async fn get_agent_cert(pool: &PgPool, agent_id: Uuid,) -> Result<Option<AgentCertRow>, PkiError> {
+pub async fn get_agent_cert(
+    pool: &PgPool,
+    agent_id: Uuid,
+) -> Result<Option<AgentCertRow>, PkiError> {
     db_certs::get_cert(pool, agent_id)
         .await
         .map_err(PkiError::Database)
 }
 
-// Comprueba si el número de serie está revocado. Usada por el interceptor gRPC en cada request 
+// Comprueba si el número de serie está revocado. Usada por el interceptor gRPC en cada request
 pub async fn is_serial_revoked(pool: &PgPool, serial: &str) -> Result<bool, PkiError> {
     db_certs::is_revoked(pool, serial)
         .await
@@ -36,14 +44,22 @@ pub async fn is_serial_revoked(pool: &PgPool, serial: &str) -> Result<bool, PkiE
 }
 
 // Persiste un nuevo token de enrolamiento (hash SHA-256 del token en claro).
-pub async fn save_token(pool: &PgPool, token_hash: &str, hostname_hint: Option<&str>, expires_at: DateTime<Utc>,) -> Result<Uuid, PkiError> {
-    db_certs::save_enroll_token(pool, token_hash, hostname_hint, expires_at)
+pub async fn save_token(
+    pool: &PgPool,
+    token_hash: &str,
+    hostname_hint: Option<&str>,
+    expires_at: DateTime<Utc>,
+) -> Result<Uuid, PkiError> {
+    db_certs::save_enroll_token(pool, token_hash, hostname_hint, expires_at.naive_utc())
         .await
         .map_err(PkiError::Database)
 }
 
 // Busca un token por su hash.
-pub async fn find_token(pool: &PgPool, token_hash: &str,) -> Result<Option<EnrollTokenRow>, PkiError> {
+pub async fn find_token(
+    pool: &PgPool,
+    token_hash: &str,
+) -> Result<Option<EnrollTokenRow>, PkiError> {
     db_certs::find_enroll_token(pool, token_hash)
         .await
         .map_err(PkiError::Database)
