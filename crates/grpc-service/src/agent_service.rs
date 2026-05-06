@@ -168,18 +168,20 @@ impl ComplyxAgent for AgentServiceImpl {
 
         let server_timestamp = chrono::Utc::now().timestamp();
 
-        // Indicar al agente si debe renovar su certificado (menos de 30 días)
-        let cert_renewal_required = check_cert_renewal_needed(&self.pool, agent_id).await;
+        // Indicar al agente si debe renovar su certificado (menos de 30 días).
+        // De momento no lo voy a implementar, implica cambiar el agente y no es que tenga mucho
+        // tiempo. Si se quiere renovar, tocará reinstalar todo.
+        //let cert_renewal_required = check_cert_renewal_needed(&self.pool, agent_id).await;
 
         tracing::debug!(
             agent_id = %agent_id,
-            cert_renewal_required,
+            //cert_renewal_required,
             "heartbeat procesado"
         );
 
         Ok(Response::new(HeartbeatResponse {
             server_timestamp,
-            cert_renewal_required,
+            //cert_renewal_required,
         }))
     }
 }
@@ -197,20 +199,20 @@ fn extract_agent_id<T>(request: &Request<T>) -> Result<Uuid, Status> {
         })
 }
 
-// Comprueba si el certificado del agente expira en menos de 30 días.
-async fn check_cert_renewal_needed(pool: &Arc<PgPool>, agent_id: Uuid) -> bool {
-    let cert = match db::certs::get_cert(pool, agent_id).await {
-        Ok(Some(c)) => c,
-        _ => return false,
-    };
-
-    // Parsear el certificado para ver cuándo expira
-    if let Ok(pem) = pem::parse(&cert.cert_pem) {
-        if let Ok((_, parsed)) = x509_parser::parse_x509_certificate(pem.contents()) {
-            let expiry = parsed.validity().not_after.timestamp();
-            let days_remaining = (expiry - chrono::Utc::now().timestamp()) / 86_400;
-            return days_remaining < 30;
-        }
-    }
-    false
-}
+// // Comprueba si el certificado del agente expira en menos de 30 días.
+//  async fn check_cert_renewal_needed(pool: &Arc<PgPool>, agent_id: Uuid) -> bool {
+//      let cert = match db::certs::get_cert(pool, agent_id).await {
+//          Ok(Some(c)) => c,
+//          _ => return false,
+//      };
+//
+//      // Parsear el certificado para ver cuándo expira
+//      if let Ok(pem) = pem::parse(&cert.cert_pem) {
+//          if let Ok((_, parsed)) = x509_parser::parse_x509_certificate(pem.contents()) {
+//              let expiry = parsed.validity().not_after.timestamp();
+//              let days_remaining = (expiry - chrono::Utc::now().timestamp()) / 86_400;
+//              return days_remaining < 30;
+//          }
+//      }
+//      false
+//  }

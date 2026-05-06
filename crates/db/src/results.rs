@@ -1,7 +1,7 @@
 //! Queries para persistir resultados de checks enviados por los agentes.
 
 //use chrono::{DateTime, Utc, NaiveDateTime, TimeZone};
-use chrono::{Utc, NaiveDateTime, TimeZone};
+use chrono::{NaiveDateTime, TimeZone, Utc};
 use sqlx::PgPool;
 use uuid::Uuid;
 
@@ -52,7 +52,10 @@ pub struct InsertCheckResult {
 /// Usa `INSERT ... ON CONFLICT DO NOTHING` para que sea idempotente:
 /// si el agente reenvía resultados que ya estaban en la BD (por un flush
 /// duplicado), no genera errores ni duplicados.
-pub async fn insert_check_results(pool: &PgPool, results: &[InsertCheckResult],) -> Result<usize, DbError> {
+pub async fn insert_check_results(
+    pool: &PgPool,
+    results: &[InsertCheckResult],
+) -> Result<usize, DbError> {
     if results.is_empty() {
         return Ok(0);
     }
@@ -62,13 +65,14 @@ pub async fn insert_check_results(pool: &PgPool, results: &[InsertCheckResult],)
 
     for r in results {
         // Convertir timestamp Unix a NaiveDateTime
-//        let executed_at = DateTime::from_timestamp(r.executed_at_unix, 0)
-//            .unwrap_or_else(Utc::now);
+        //        let executed_at = DateTime::from_timestamp(r.executed_at_unix, 0)
+        //            .unwrap_or_else(Utc::now);
         let executed_at: NaiveDateTime = Utc
             //.timestamp_opt(r.executed_at_unix, 0)
             .timestamp_opt(r.executed_at_unix, 0)
             .single()
-            .unwrap_or_else(|| Utc::now())
+            .unwrap_or_else(Utc::now) // Quito el closure porque no captura nada,
+            // paso directamente al now
             .naive_utc();
 
         let result = sqlx::query!(
@@ -86,9 +90,9 @@ pub async fn insert_check_results(pool: &PgPool, results: &[InsertCheckResult],)
             r.expected_value,
             executed_at,
         )
-            .execute(&mut *tx)
-            .await
-            .map_err(DbError::Query)?;
+        .execute(&mut *tx)
+        .await
+        .map_err(DbError::Query)?;
 
         inserted += result.rows_affected() as usize;
     }
@@ -110,7 +114,10 @@ pub async fn insert_check_results(pool: &PgPool, results: &[InsertCheckResult],)
 ///
 /// Un "resultado más reciente" es el último `passed`/`failed` para cada `check_id`.
 /// Se usa un UPSERT para que llamadas repetidas actualicen en lugar de duplicar.
-pub async fn upsert_compliance_scores(pool: &PgPool, agent_id: Uuid,) -> Result<Vec<ComplianceScoreRow>, DbError> {
+pub async fn upsert_compliance_scores(
+    pool: &PgPool,
+    agent_id: Uuid,
+) -> Result<Vec<ComplianceScoreRow>, DbError> {
     // Calcula los scores en una sola query usando window functions
     let scores = sqlx::query_as!(
         ComplianceScoreRow,
@@ -173,7 +180,10 @@ pub async fn upsert_compliance_scores(pool: &PgPool, agent_id: Uuid,) -> Result<
 }
 
 /// Devuelve los resultados más recientes de un agente para todos sus checks.
-pub async fn get_latest_results_for_agent(pool: &PgPool, agent_id: Uuid,) -> Result<Vec<CheckResultRow>, DbError> {
+pub async fn get_latest_results_for_agent(
+    pool: &PgPool,
+    agent_id: Uuid,
+) -> Result<Vec<CheckResultRow>, DbError> {
     sqlx::query_as!(
         CheckResultRow,
         r#"
@@ -196,7 +206,11 @@ pub async fn get_latest_results_for_agent(pool: &PgPool, agent_id: Uuid,) -> Res
 ///
 /// Devuelve los IDs que NO son válidos para ese agente.
 /// Se usa en el `validator` del `result-ingester`.
-pub async fn validate_check_ids_for_agent(pool: &PgPool, agent_id: Uuid, check_ids: &[Uuid],) -> Result<Vec<Uuid>, DbError> {
+pub async fn validate_check_ids_for_agent(
+    pool: &PgPool,
+    agent_id: Uuid,
+    check_ids: &[Uuid],
+) -> Result<Vec<Uuid>, DbError> {
     if check_ids.is_empty() {
         return Ok(vec![]);
     }
@@ -231,7 +245,8 @@ pub async fn validate_check_ids_for_agent(pool: &PgPool, agent_id: Uuid, check_i
     .await
     .map_err(DbError::Query)?;
 
-    let valid_ids: std::collections::HashSet<Uuid> = valid.into_iter().map(|r| r.check_id).collect();
+    let valid_ids: std::collections::HashSet<Uuid> =
+        valid.into_iter().map(|r| r.check_id).collect();
 
     let invalid: Vec<Uuid> = check_ids
         .iter()

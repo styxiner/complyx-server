@@ -89,7 +89,7 @@ message HeartbeatRequest {
 
 message HeartbeatResponse {
   int64 server_timestamp = 1;
-  bool cert_renewal_required = 2;
+  //bool cert_renewal_required = 2;
 }
 
 message EnrollRequest {
