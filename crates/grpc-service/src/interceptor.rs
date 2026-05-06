@@ -39,19 +39,47 @@ pub async fn auth_interceptor(
 ) -> Result<Request<()>, Status> {
     // Extraer el PEM del certificado de cliente de los metadatos del request. Tonic lo inyecta bajo
     // la clave "x-tls-client-cert" cuando está configurado para pasar las peer credentials.
-    let cert_pem = req
-        .metadata()
-        .get("x-tls-client-cert")
-        .and_then(|v| v.to_str().ok())
-        .ok_or_else(|| {
-            Status::unauthenticated("certificado de cliente no presente en el request")
-        })?;
+    //    let cert_pem = req
+    //        .metadata()
+    //        .get("x-tls-client-cert")
+    //        .and_then(|v| v.to_str().ok())
+    //        .ok_or_else(|| {
+    //            Status::unauthenticated("certificado de cliente no presente en el request")
+    //        })?;
+    //
+    //    // Parsear el certificado para extraer el CN y el serial
+    //    let (cn, serial) = parse_cert_cn_and_serial(cert_pem).map_err(|e| {
+    //        tracing::warn!(error = %e, "certificado de cliente inválido");
+    //        Status::unauthenticated("certificado de cliente inválido")
+    //    })?;
 
-    // Parsear el certificado para extraer el CN y el serial
-    let (cn, serial) = parse_cert_cn_and_serial(cert_pem).map_err(|e| {
-        tracing::warn!(error = %e, "certificado de cliente inválido");
-        Status::unauthenticated("certificado de cliente inválido")
+    let certs = req
+        .peer_certs()
+        .ok_or_else(|| Status::unauthenticated("certificado del cliente no presente"))?;
+
+    let cert_der = certs
+        .first()
+        .ok_or_else(|| Status::unauthenticated("cadena de certificados vacia"))?;
+
+    // Parsear el DER directamente sin convertir a PEM
+    let (_, cert) = x509_parser::parse_x509_certificate(cert_der.as_ref()).map_err(|e| {
+        tracing::warn!(
+            error = %e,
+            "certificado de cliente invalido"
+        );
+
+        Status::unauthenticated("certificado de cliente invalido")
     })?;
+
+    let cn = cert
+        .subject()
+        .iter_common_name()
+        .next()
+        .and_then(|cn| cn.as_str().ok())
+        .ok_or_else(|| Status::unauthenticated("certificado sin CN"))?
+        .to_string();
+
+    let serial = hex::encode(cert.serial.to_bytes_be());
 
     // Verificar que el certificado no está revocado
     let is_revoked = grpc_pki::is_cert_revoked(&state.pool, &serial)

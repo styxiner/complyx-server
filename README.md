@@ -123,6 +123,41 @@ cargo build
 
 El binario queda en `target/debug/complyx-server`.
 
+Para ejecutarlo en bare-metal habría que primero generar un par de claves a partir de la CA generada:
+
+```bash
+# Generar clave privada del servidor
+sudo openssl genpkey \
+  -algorithm EC \
+  -pkeyopt ec_paramgen_curve:P-256 \
+  -out /var/lib/complyx/pki/server.key
+
+# Generar CSR con SAN
+sudo openssl req \
+  -new \
+  -key /var/lib/complyx/pki/server.key \
+  -subj "/CN=complyx-server/O=Complyx" \
+  -addext "subjectAltName=DNS:localhost,IP:127.0.0.1" \
+  -out /tmp/server.csr
+
+# Firmar con la CA de Complyx
+sudo openssl x509 \
+  -req \
+  -in /tmp/server.csr \
+  -CA /var/lib/complyx/pki/ca.crt \
+  -CAkey /var/lib/complyx/pki/ca.key \
+  -CAcreateserial \
+  -days 365 \
+  -copy_extensions copyall \
+  -out /var/lib/complyx/pki/server.crt
+
+# Verificar el resultado
+sudo openssl x509 \
+  -in /var/lib/complyx/pki/server.crt \
+  -text \
+  -noout | grep -A2 "Subject Alternative"
+```
+
 ---
 
 ## Compilación para producción

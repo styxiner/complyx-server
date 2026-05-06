@@ -11,3 +11,15 @@ members = [
   "crates/result-ingester",
   "crates/server-core",
 ]
+
+[profile.release]
+opt-level = "z"   # proriza optimizar el tamaño sobre velocidad de compilacion
+lto = true        # elimina codigo muerto entre crates 
+codegen-units = 1 # usando solo uno reduce el tamaño del binario
+strip = true      # elimina simbolos de debug del binario final
+panic = "abort"   # elimina la maquinaria de unwinding
+
+[profile.dist]
+inherits = "release"
+opt-level = "z"
+lto = "fat"
