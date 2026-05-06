@@ -3,4 +3,44 @@ name = "server-core"
 version = "0.1.0"
 edition = "2024"
 
+[[bin]]
+name = "complyx-server"
+path = "src/main.rs"
+
 [dependencies]
+db = { path = "../db" }
+pki = { path = "../pki" }
+grpc-pki = { path = "../grpc-pki" }
+grpc-service = { path = "../grpc-service" }
+orchestrator = { path = "../orchestrator" }
+policy-distributor = { path = "../policy-distributor" }
+result-ingester = { path = "../result-ingester" }
+proto = { path = "../proto" }
+
+tonic = { version = "0.12", features = ["tls"] }
+tokio = { version = "1", features = [
+  "macros",
+  "rt-multi-thread",
+  "signal",
+  "time",
+  "sync",
+  "fs",
+] }
+
+figment = { version = "0.10", features = ["toml", "env"] }
+serde = { version = "1", features = ["derive"] }
+
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = [
+  "env-filter",
+  "json",
+  "fmt",
+] }
+anyhow = "1"
+thiserror = "1"
+
+uuid = { version = "1", features = ["v4"] }
+chrono = "0.4"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }

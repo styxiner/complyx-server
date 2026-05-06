@@ -19,46 +19,46 @@ use uuid::Uuid;
 use db::PgPool;
 use pki::revoke;
 
+/// Error del crate `grpc-pki`.
 #[derive(Debug, thiserror::Error)]
 pub enum GrpcPkiError {
-    #[error("error de E/S leyendo certificados en '{path}': '{source}'")]
+    #[error("error de I/O leyendo certificados en '{path}': {source}")]
     Io {
         path: String,
-
         #[source]
         source: std::io::Error,
     },
 
-    #[error("no se encontro ningun certificado en '{path}'")]
+    #[error("no se encontró ningún certificado en '{path}'")]
     NoCertificate { path: String },
 
-    #[error("no se encontro ninguna clave privada en '{path}'")]
+    #[error("no se encontró ninguna clave privada en '{path}'")]
     NoPrivateKey { path: String },
 
-    #[error("PEM invalido en '{path}': {reason}")]
+    #[error("PEM inválido en '{path}': {reason}")]
     InvalidPem { path: String, reason: String },
 
-    #[error("error en la base de datos: {0}")]
+    #[error("error de base de datos: {0}")]
     Database(#[from] db::DbError),
 
     #[error("error de la PKI: {0}")]
     Pki(#[from] pki::PkiError),
 }
 
-// Configuracion TLS para el puerto principal (9000) con mTLS.
+// Configuración TLS para el puerto principal (`:9000`) con mTLS.
 //
-// Requiere 3 ficheros en `ca_dir`:
-// * `server.crt`: certificado del servidor (firmado por la CA interna)
-// * `server.key`: clave privada del servidor
-// * `ca.crt`: certificado raiz de la CA (para verificar los agentes)
+// Requiere tres ficheros en `ca_dir`:
+// - `server.crt` — certificado del servidor (firmado por la CA interna).
+// - `server.key` — clave privada del servidor.
+// - `ca.crt`     — certificado raíz de la CA (para verificar los agentes).
 //
-// El certificado del servidor puede ser el mismo que el de la CA si el servidor se autentica con su
-// propio cert raiz, o un certificado separado emitido por la CA.
+// El certificado del servidor puede ser el mismo que el de la CA si el servidor se autentica con
+// su propio cert raiz, o un certificado separado emitido por la CA.
 pub async fn build_mtls_config(ca_dir: impl AsRef<Path>) -> Result<ServerTlsConfig, GrpcPkiError> {
     let dir = ca_dir.as_ref();
 
     let server_cert_pem = read_file(dir.join("server.crt")).await?;
-    let server_key_pem = read_file(dir.join("servr.key")).await?;
+    let server_key_pem = read_file(dir.join("server.key")).await?;
     let ca_cert_pem = read_file(dir.join("ca.crt")).await?;
 
     validate_cert_pem(
@@ -71,10 +71,10 @@ pub async fn build_mtls_config(ca_dir: impl AsRef<Path>) -> Result<ServerTlsConf
     )?;
     validate_cert_pem(&ca_cert_pem, &dir.join("ca.crt").display().to_string())?;
 
-    // Ponemos como Identiy a la asociacion del servidor con su clave privada.
+    // Identity = certificado del servidor + clave privada
     let identity = Identity::from_pem(&server_cert_pem, &server_key_pem);
 
-    // CA raiz para verificar los certificados de cliente (mTLS)
+    // CA raíz para verificar los certificados de cliente (mTLS)
     let client_ca = Certificate::from_pem(&ca_cert_pem);
 
     let config = ServerTlsConfig::new()
@@ -83,17 +83,49 @@ pub async fn build_mtls_config(ca_dir: impl AsRef<Path>) -> Result<ServerTlsConf
 
     tracing::info!(
         ca_dir = %dir.display(),
-        "configuracion mTLS del servidor construida"
+        "configuración mTLS del servidor construida"
     );
 
     Ok(config)
 }
 
-// Verifica si el certificado con el serial dado esta revocado. Se llama desde el interceptor gRPC
-// del puerto principal en cada request entrante, tras exceder el serial del certificado de cliente
-// del handshake TLS.
+// Configuración TLS para el puerto de enrolamiento (`:9001`) — TLS one-way.
 //
-// La consulta usa el indice `idx_agent_certs_serial` para optimizar tiempos.
+// El servidor se autentica ante el agente pero no requiere certificado de cliente. Requiere
+// `server.crt` y `server.key` en `ca_dir`
+pub async fn build_tls_config(ca_dir: impl AsRef<Path>) -> Result<ServerTlsConfig, GrpcPkiError> {
+    let dir = ca_dir.as_ref();
+
+    let server_cert_pem = read_file(dir.join("server.crt")).await?;
+    let server_key_pem = read_file(dir.join("server.key")).await?;
+
+    validate_cert_pem(
+        &server_cert_pem,
+        &dir.join("server.crt").display().to_string(),
+    )?;
+    validate_key_pem(
+        &server_key_pem,
+        &dir.join("server.key").display().to_string(),
+    )?;
+
+    let identity = Identity::from_pem(&server_cert_pem, &server_key_pem);
+
+    let config = ServerTlsConfig::new().identity(identity);
+
+    tracing::info!(
+        ca_dir = %dir.display(),
+        "configuración TLS one-way del servidor construida"
+    );
+
+    Ok(config)
+}
+
+// Verifica si el certificado con el serial dado está revocado.
+//
+// Se llama desde el interceptor gRPC del puerto principal en cada request entrante, tras extraer
+// el serial del certificado de cliente del TLS handshake.
+//
+// La consulta usa el índice `idx_agent_certs_serial` para ser O(log n).
 pub async fn is_cert_revoked(pool: &PgPool, serial: &str) -> Result<bool, GrpcPkiError> {
     revoke::is_cert_revoked(pool, serial)
         .await
@@ -102,7 +134,6 @@ pub async fn is_cert_revoked(pool: &PgPool, serial: &str) -> Result<bool, GrpcPk
 
 async fn read_file(path: impl AsRef<Path>) -> Result<Vec<u8>, GrpcPkiError> {
     let path = path.as_ref();
-
     tokio::fs::read(path).await.map_err(|e| GrpcPkiError::Io {
         path: path.display().to_string(),
         source: e,
