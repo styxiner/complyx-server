@@ -59,6 +59,27 @@ pub async fn get_agent(pool: &PgPool, id: Uuid) -> Result<Option<AgentRow>, DbEr
     .map_err(DbError::Query)
 }
 
+// No me gusta esto, por si existe algun "fallo" de que en una red existen 2 maquinas con el mismo
+// hostname, pero bueno. De por si sería raro.
+pub async fn get_agent_by_hostname(
+    pool: &PgPool,
+    hostname: &str,
+) -> Result<Option<AgentRow>, DbError> {
+    sqlx::query_as!(
+        AgentRow,
+        r#"
+        SELECT id, ip::text AS "ip!", hostname, os_name, os_version, install_date, latest_connection, enabled
+        FROM agents
+        WHERE hostname = $1
+        LIMIT 1
+        "#,
+        hostname
+    )
+    .fetch_optional(pool)
+    .await
+    .map_err(DbError::Query)
+}
+
 // Inserta un agente nuevo o actualiza sus datos si ya existe (basandose en la IP)
 //
 // Se usa en el registro: Si un agente con la misma IP ya existe, se actualiza en vez de crear un

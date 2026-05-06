@@ -26,6 +26,9 @@
 mod hasher;
 mod resolver;
 
+pub use hasher::bundle_hash;
+pub use resolver::PolicyDistributor;
+
 #[derive(Debug, thiserror::Error)]
 pub enum DistributorError {
     #[error("error de la base de datos: {0}")]

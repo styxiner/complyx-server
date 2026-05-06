@@ -724,6 +724,24 @@ dependencies = [
 [[package]]
 name = "grpc-service"
 version = "0.1.0"
+dependencies = [
+ "chrono",
+ "db",
+ "grpc-pki",
+ "hex",
+ "orchestrator",
+ "pem",
+ "pki",
+ "policy-distributor",
+ "proto",
+ "result-ingester",
+ "thiserror 1.0.69",
+ "tokio",
+ "tonic",
+ "tracing",
+ "uuid",
+ "x509-parser 0.16.0",
+]
 
 [[package]]
 name = "h2"

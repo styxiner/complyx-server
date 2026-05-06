@@ -4,3 +4,23 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+db = { path = "../db" }
+pki = { path = "../pki" }
+grpc-pki = { path = "../grpc-pki" }
+orchestrator = { path = "../orchestrator" }
+policy-distributor = { path = "../policy-distributor" }
+result-ingester = { path = "../result-ingester" }
+proto = { path = "../proto" }
+
+tonic = { version = "0.12", features = ["tls"] }
+tokio = { version = "1", features = ["sync", "macros"] }
+
+x509-parser = "0.16"
+uuid = { version = "1", features = ["v4"] }
+chrono = "0.4"
+
+pem = "3"
+hex = "0.4"
+
+thiserror = "1"
+tracing = "0.1"
