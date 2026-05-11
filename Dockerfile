@@ -1,4 +1,4 @@
-ARG RUST_VERSION=1.87
+ARG RUST_VERSION=1.88
 ARG APP_NAME=complyx-server
 
 # ---------------------------------------------------------------------------
@@ -16,7 +16,7 @@ RUN apk add --no-cache \
   musl-dev \
   git \
   protobuf-dev \
-  protobuf-compiler \
+  protobuf \
   pkgconf \
   openssl-dev
 
