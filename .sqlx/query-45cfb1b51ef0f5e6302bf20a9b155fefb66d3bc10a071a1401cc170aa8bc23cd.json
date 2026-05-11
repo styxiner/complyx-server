@@ -1,0 +1,70 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT DISTINCT ON (check_id)\n            id, agent_id, check_id, passed, detail,\n            actual_value, expected_value, executed_at, received_at\n        FROM check_results\n        WHERE agent_id = $1\n        ORDER BY check_id, executed_at DESC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "agent_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "check_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "passed",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 4,
+        "name": "detail",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "actual_value",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "expected_value",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "executed_at",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 8,
+        "name": "received_at",
+        "type_info": "Timestamp"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "45cfb1b51ef0f5e6302bf20a9b155fefb66d3bc10a071a1401cc170aa8bc23cd"
+}

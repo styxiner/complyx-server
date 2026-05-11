@@ -1,0 +1,64 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT id, ip::text AS \"ip!\", hostname, os_name, os_version, install_date, latest_connection, enabled\n        FROM agents\n        WHERE id = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "ip!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "hostname",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "os_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "os_version",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "install_date",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 6,
+        "name": "latest_connection",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 7,
+        "name": "enabled",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "8a107a0bac5358d5a6aebb058651afac7389c406d1786ac554b5b1f137f8d722"
+}

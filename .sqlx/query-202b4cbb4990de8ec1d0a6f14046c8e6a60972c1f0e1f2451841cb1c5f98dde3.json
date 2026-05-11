@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT crs.check_id, crs.regulation_section_id\n        FROM check_regulation_sections crs\n        INNER JOIN policy_checks pc ON crs.check_id = pc.id\n        INNER JOIN policy_elements pe ON pc.policy_element_id = pe.id\n        WHERE pe.policy_id = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "check_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "regulation_section_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "202b4cbb4990de8ec1d0a6f14046c8e6a60972c1f0e1f2451841cb1c5f98dde3"
+}

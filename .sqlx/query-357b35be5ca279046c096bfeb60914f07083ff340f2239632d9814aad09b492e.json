@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT DISTINCT pc.id AS check_id\n        FROM policy_checks pc\n        INNER JOIN policy_elements pe ON pc.policy_element_id = pe.id\n        WHERE pc.id = ANY($1)\n          AND (\n              -- Asignación directa\n              EXISTS (\n                  SELECT 1 FROM agent_policies ap\n                  WHERE ap.agent_id = $2 AND ap.policy_id = pe.policy_id\n              )\n              OR\n              -- Asignación por grupo\n              EXISTS (\n                  SELECT 1 FROM group_policies gp\n                  INNER JOIN agent_group_membership agm ON gp.group_id = agm.group_id\n                  WHERE agm.agent_id = $2 AND gp.policy_id = pe.policy_id\n              )\n          )\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "check_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "UuidArray",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "357b35be5ca279046c096bfeb60914f07083ff340f2239632d9814aad09b492e"
+}

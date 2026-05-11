@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO check_results\n                (agent_id, check_id, passed, detail, actual_value, expected_value, executed_at)\n            VALUES ($1, $2, $3, $4, $5, $6, $7)\n            ON CONFLICT (agent_id, check_id, executed_at) DO NOTHING\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Bool",
+        "Text",
+        "Text",
+        "Text",
+        "Timestamp"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a32e6adc9e1a715adaf032a1e642fef692c2d7a79635aa425432d73719c97bca"
+}

@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE agent_certs SET revoked_at = now() WHERE agent_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "6adb2aeb42aafc6337a5cd63bdf95a8d95892fbee26705e28fea2e2ab2de93f4"
+}

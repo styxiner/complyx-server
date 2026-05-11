@@ -1,0 +1,58 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        WITH latest_results AS (\n            -- Para cada check del agente, tomar solo el resultado más reciente\n            SELECT DISTINCT ON (check_id)\n                check_id,\n                passed\n            FROM check_results\n            WHERE agent_id = $1\n            ORDER BY check_id, executed_at DESC\n        ),\n        element_scores AS (\n            SELECT\n                pe.id          AS policy_element_id,\n                pe.policy_id,\n                COUNT(pc.id)   AS total_checks,\n                COUNT(lr.check_id) FILTER (WHERE lr.passed = true) AS passed_checks\n            FROM policy_elements pe\n            INNER JOIN policy_checks pc ON pc.policy_element_id = pe.id\n            LEFT JOIN latest_results lr ON lr.check_id = pc.id\n            GROUP BY pe.id, pe.policy_id\n        )\n        INSERT INTO compliance_scores\n            (agent_id, policy_element_id, policy_id, total_checks, passed_checks, score, last_updated)\n        SELECT\n            $1 AS agent_id,\n            policy_element_id,\n            policy_id,\n            total_checks,\n            passed_checks,\n            CASE WHEN total_checks > 0\n                THEN (passed_checks::float / total_checks::float) * 100.0\n                ELSE 0.0\n            END AS score,\n            now() AS last_updated\n        FROM element_scores\n        ON CONFLICT (agent_id, policy_element_id) DO UPDATE SET\n            total_checks  = EXCLUDED.total_checks,\n            passed_checks = EXCLUDED.passed_checks,\n            score         = EXCLUDED.score,\n            last_updated  = EXCLUDED.last_updated\n        RETURNING\n            agent_id,\n            policy_element_id,\n            policy_id,\n            total_checks,\n            passed_checks,\n            score,\n            last_updated\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "agent_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "policy_element_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "policy_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "total_checks",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "passed_checks",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "score",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 6,
+        "name": "last_updated",
+        "type_info": "Timestamp"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "b4f2a1ec3b0602bb9d4c62f6ce458bcd31afddb0b3e5dc485f3276912b6746b2"
+}

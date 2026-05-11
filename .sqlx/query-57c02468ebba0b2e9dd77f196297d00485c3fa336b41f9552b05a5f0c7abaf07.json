@@ -1,0 +1,44 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT agent_id, cert_pem, serial, issued_at, revoked_at\n        FROM agent_certs\n        WHERE revoked_at IS NOT NULL\n        ORDER BY revoked_at DESC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "agent_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "cert_pem",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "serial",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "issued_at",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 4,
+        "name": "revoked_at",
+        "type_info": "Timestamp"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "57c02468ebba0b2e9dd77f196297d00485c3fa336b41f9552b05a5f0c7abaf07"
+}

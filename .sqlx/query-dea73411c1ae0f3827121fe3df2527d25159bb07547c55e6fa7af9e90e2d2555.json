@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT ag.id, ag.name, ag.description, ag.created_date\n        FROM agent_groups ag\n        INNER JOIN agent_group_membership agm ON ag.id = agm.group_id\n        WHERE agm.agent_id = $1\n        ORDER BY ag.name \n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "created_date",
+        "type_info": "Timestamp"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "dea73411c1ae0f3827121fe3df2527d25159bb07547c55e6fa7af9e90e2d2555"
+}

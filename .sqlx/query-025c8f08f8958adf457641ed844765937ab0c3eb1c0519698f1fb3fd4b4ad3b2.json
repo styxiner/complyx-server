@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        DELETE \n        FROM agent_group_membership\n        WHERE agent_id = $1 AND group_id = $2\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "025c8f08f8958adf457641ed844765937ab0c3eb1c0519698f1fb3fd4b4ad3b2"
+}

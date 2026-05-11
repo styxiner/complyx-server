@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO agent_certs (agent_id, cert_pem, serial, issued_at)\n        VALUES ($1, $2, $3, now())\n        ON CONFLICT (agent_id) DO UPDATE SET\n            cert_pem  = EXCLUDED.cert_pem,\n            serial    = EXCLUDED.serial,\n            issued_at = EXCLUDED.issued_at,\n            revoked_at = NULL\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Varchar"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2b68133c300292259294cc69a403ac58f0656523ad448eeb8746f53fc844ecec"
+}

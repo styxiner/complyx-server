@@ -1,0 +1,25 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO agents (ip, hostname, os_name, os_version, latest_connection)\n        VALUES ($1::inet, $2, $3, $4, now())\n        ON CONFLICT (ip) DO UPDATE SET \n            hostname = EXCLUDED.hostname,\n            os_name = EXCLUDED.os_name,\n            os_version = EXCLUDED.os_version,\n            latest_connection = now()\n        RETURNING id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Inet",
+        "Varchar",
+        "Varchar",
+        "Varchar"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "2f21f7650d21c169906df775c201153a3f9240b3907f4f04893b6cec7e309de8"
+}

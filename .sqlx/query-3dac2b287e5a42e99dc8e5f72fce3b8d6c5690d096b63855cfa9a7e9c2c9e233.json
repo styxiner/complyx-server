@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE risks\n        SET status          = $1,\n            acceptance_date = COALESCE($2, acceptance_date)\n        WHERE id = $3\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Timestamp",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "3dac2b287e5a42e99dc8e5f72fce3b8d6c5690d096b63855cfa9a7e9c2c9e233"
+}

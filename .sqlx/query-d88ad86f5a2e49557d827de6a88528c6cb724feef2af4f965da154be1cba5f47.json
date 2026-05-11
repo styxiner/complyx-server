@@ -1,0 +1,76 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT id, threat_id, agent_id,\n               impact::float8 AS impact,\n               probability::float8 AS probability,\n               risk_level, status, created_date, review_date, acceptance_date\n        FROM risks WHERE id = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "threat_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "agent_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "impact",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 4,
+        "name": "probability",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 5,
+        "name": "risk_level",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
+        "name": "status",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 7,
+        "name": "created_date",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 8,
+        "name": "review_date",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 9,
+        "name": "acceptance_date",
+        "type_info": "Timestamp"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      null,
+      null,
+      true,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "d88ad86f5a2e49557d827de6a88528c6cb724feef2af4f965da154be1cba5f47"
+}
