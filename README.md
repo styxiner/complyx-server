@@ -311,6 +311,60 @@ complyx-server revoke-agent --agent-id 550e8400-e29b-41d4-a716-446655440000
 El agente recibirá un error `Unauthenticated` en su próximo poll
 y dejará de comunicarse con el servidor.
 
+### Crear politicas
+
+Para los checker del motor de politicas, existen las siguientes acciones:
+
+|Tipo|Descripcion|Ejemplo de params|
+|----|-----------|-----------------|
+|`file_line`|Comprueba que una linea contenga un contenido en especifico|`{"path": "/etc/login.defs", "key": "PASS_MIN_LEN", "operator": "gte", "value": "12"}`|
+|`file_block`|Comprueba que en un fichero, existan un conjunto de lineas|`{"path": "/etc/pam.d/common-password", "patterns": ["pam_pwquality"]}`|
+|`file_exists`|Comprueba que un fichero existe|`{"path":"/etc/audit/auditd.conf","file_type":"file"}`|
+|`file_absent`|Comprueba que un fichero no existe|`{"name":"telnetd"}`|
+|`pkg_installed`|Comprueba que un paquete esta instalado|`{"name":"auditd"}`|
+|`pkg_absent`|Comprueba que un paquete no esta instalado|`{"name":"telnetd"}`|
+|`service`|Comprueba que un servicio este bien configurado|`{"name":"auditd","active":true,"enabled":true}`|
+|`sysctl`|Comprueba un valor de parámetros del kernel|`{"key":"net.ipv4.ip_forward","operator":"eq","value":"0"}`|
+|`user_attr`|Comprueba las caracteristicas de un usuario|`{"user":"root","attr":"shell","operator":"eq","value":"/bin/bash"}`|
+
+Para una prueba rapida, se puede añadir un check directamente en la bbdd:
+
+```sql
+-- Check: ip_forward desactivado
+INSERT INTO policy_checks (policy_element_id, name, rationale, check_command)
+VALUES (
+    '<element_id>',
+    'ip_forward = 0',
+    'El reenvío de paquetes IP debe estar desactivado en endpoints',
+    '{"type": "sysctl", "key": "net.ipv4.ip_forward", "operator": "eq", "value": "0"}'
+)
+RETURNING id;
+```
+
+Para los remediator del motor de remediaciones, existen las siguientes acciones:
+
+|Tipo|Descripcion|Ejemplo de params|
+|----|-----------|-----------------|
+|`file_line_set`|Reemplaza o crea una directiva `clave valor` en un fichero|``|
+|`file_block_set`|Asegura que un bloque de texto esta presente en un fichero|``|
+|`pkg_install`|Instala un paquete usando el gestor de paquetes del sistema|``|
+|`pkg_remove`|Desinstala un paquete usando el gestor de paquetes del sistema|``|
+|`sysctl_set`|Establece un parametro del kernel de forma persistente y aplicando el valor en runtime|``|
+|`service_set`|Aciva, desactiva, arranca o para un servicio systemd|``|
+
+Para realizar pruebas, se puede probar a añadir los siguientes:
+
+```sql
+-- Remediación automática
+INSERT INTO policy_remediations (policy_check_id, name, description, remediation_command)
+VALUES (
+    '<check_id>',
+    'Desactivar ip_forward',
+    'Desactiva el reenvío de paquetes IP a nivel de kernel',
+    '{"type": "sysctl_set", "key": "net.ipv4.ip_forward", "value": "0"}'
+);
+```
+
 ### Directorios relevantes
 
 |Ruta|Contenido|
