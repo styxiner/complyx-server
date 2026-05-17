@@ -82,7 +82,8 @@ CREATE TABLE policies (
     name VARCHAR(250) NOT NULL UNIQUE,
     version VARCHAR(10) NOT NULL,
     description TEXT,
-    severity VARCHAR(20) CHECK (severity IN ('critical', 'high', 'medium', 'low')),
+    severity VARCHAR(20) CHECK (severity IN ('critical', 'high', 'medium', 'low', 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW')),
+    status character varying(20) NOT NULL DEFAULT 'DRAFT' CHECK (status IN ('DRAFT', 'ACTIVE', 'INACTIVE', 'ARCHIVED')),
     created_date TIMESTAMP NOT NULL DEFAULT now(),
     last_modified TIMESTAMP NOT NULL DEFAULT now()
 );
@@ -98,7 +99,7 @@ CREATE TABLE policy_checks (
     policy_element_id UUID NOT NULL REFERENCES policy_elements(id) ON DELETE CASCADE,
     name VARCHAR(50) NOT NULL,
     rationale VARCHAR,
-    check_command VARCHAR NOT NULL,
+    check_params JSONB NOT NULL,
     created_date TIMESTAMP NOT NULL DEFAULT now()
 );
 
@@ -115,7 +116,7 @@ CREATE TABLE policy_remediations (
     policy_check_id UUID NOT NULL REFERENCES policy_checks(id) ON DELETE CASCADE,
     name VARCHAR(50) NOT NULL,
     description VARCHAR,
-    remediation_command VARCHAR NOT NULL,
+    remediation_params JSONB NOT NULL,
     created_date TIMESTAMP NOT NULL DEFAULT now()
 );
 
