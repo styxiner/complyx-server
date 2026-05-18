@@ -63,7 +63,7 @@ CREATE TABLE agent_group_membership (
 CREATE TABLE regulations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(250) NOT NULL,
-    pdf_path VARCHAR(250) NOT NULL,
+    pdf_path VARCHAR(250),
     added_date TIMESTAMP NOT NULL DEFAULT now(),
     last_modification TIMESTAMP NOT NULL DEFAULT now()
 );
