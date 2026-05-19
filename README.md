@@ -331,7 +331,7 @@ Para una prueba rapida, se puede añadir un check directamente en la bbdd:
 
 ```sql
 -- Check: ip_forward desactivado
-INSERT INTO policy_checks (policy_element_id, name, rationale, check_command)
+INSERT INTO policy_checks (policy_element_id, name, rationale, check_params)
 VALUES (
     '<element_id>',
     'ip_forward = 0',

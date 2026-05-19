@@ -7,7 +7,6 @@ use uuid::Uuid;
 
 use crate::DbError;
 
-
 #[derive(Debug, Clone)]
 pub struct PolicyRow {
     pub id: Uuid,
@@ -32,7 +31,7 @@ pub struct PolicyCheckRow {
     pub policy_element_id: Uuid,
     pub name: String,
     pub rationale: Option<String>,
-    pub check_command: String, // JSON con el tipo de check y sus parámetros
+    pub check_params: String, // JSON con el tipo de check y sus parámetros
     pub created_date: NaiveDateTime,
 }
 
@@ -52,7 +51,6 @@ pub struct CheckRegulationSectionRow {
     pub regulation_section_id: Uuid,
 }
 
-
 /// Bundle completo de una política: elementos + checks + remediaciones + secciones.
 /// Es lo que el `policy-distributor` necesita para construir el `PolicyBundle` proto.
 #[derive(Debug)]
@@ -68,7 +66,10 @@ pub struct PolicyBundle {
 ///
 /// Se hace en queries separadas (no con JOIN) para evitar el producto cartesiano
 /// que generaría filas duplicadas cuando hay múltiples elementos × checks × secciones.
-pub async fn get_policy_bundle(pool: &PgPool, policy_id: Uuid,) -> Result<Option<PolicyBundle>, DbError> {
+pub async fn get_policy_bundle(
+    pool: &PgPool,
+    policy_id: Uuid,
+) -> Result<Option<PolicyBundle>, DbError> {
     // Cargar la política base
     let policy = match get_policy(pool, policy_id).await? {
         Some(p) => p,
@@ -91,7 +92,6 @@ pub async fn get_policy_bundle(pool: &PgPool, policy_id: Uuid,) -> Result<Option
         check_regulation_sections: sections,
     }))
 }
-
 
 pub async fn get_policy(pool: &PgPool, id: Uuid) -> Result<Option<PolicyRow>, DbError> {
     sqlx::query_as!(
@@ -119,9 +119,11 @@ pub async fn list_policies(pool: &PgPool) -> Result<Vec<PolicyRow>, DbError> {
     .map_err(DbError::Query)
 }
 
-
 /// Políticas asignadas directamente a un agente.
-pub async fn get_direct_policies_for_agent(pool: &PgPool, agent_id: Uuid,) -> Result<Vec<Uuid>, DbError> {
+pub async fn get_direct_policies_for_agent(
+    pool: &PgPool,
+    agent_id: Uuid,
+) -> Result<Vec<Uuid>, DbError> {
     let rows = sqlx::query!(
         "SELECT policy_id FROM agent_policies WHERE agent_id = $1",
         agent_id
@@ -137,7 +139,10 @@ pub async fn get_direct_policies_for_agent(pool: &PgPool, agent_id: Uuid,) -> Re
 ///
 /// Recibe una slice de group_ids porque un agente puede pertenecer a varios grupos.
 /// Devuelve IDs deduplicados.
-pub async fn get_policies_for_groups(pool: &PgPool, group_ids: &[Uuid],) -> Result<Vec<Uuid>, DbError> {
+pub async fn get_policies_for_groups(
+    pool: &PgPool,
+    group_ids: &[Uuid],
+) -> Result<Vec<Uuid>, DbError> {
     if group_ids.is_empty() {
         return Ok(vec![]);
     }
@@ -158,7 +163,11 @@ pub async fn get_policies_for_groups(pool: &PgPool, group_ids: &[Uuid],) -> Resu
 }
 
 /// Asigna una política a un agente directamente.
-pub async fn assign_policy_to_agent(pool: &PgPool, agent_id: Uuid, policy_id: Uuid,) -> Result<(), DbError> {
+pub async fn assign_policy_to_agent(
+    pool: &PgPool,
+    agent_id: Uuid,
+    policy_id: Uuid,
+) -> Result<(), DbError> {
     sqlx::query!(
         r#"
         INSERT INTO agent_policies (agent_id, policy_id)
@@ -175,7 +184,11 @@ pub async fn assign_policy_to_agent(pool: &PgPool, agent_id: Uuid, policy_id: Uu
 }
 
 /// Asigna una política a un grupo.
-pub async fn assign_policy_to_group(pool: &PgPool, group_id: Uuid, policy_id: Uuid,) -> Result<(), DbError> {
+pub async fn assign_policy_to_group(
+    pool: &PgPool,
+    group_id: Uuid,
+    policy_id: Uuid,
+) -> Result<(), DbError> {
     sqlx::query!(
         r#"
         INSERT INTO group_policies (group_id, policy_id)
@@ -192,7 +205,11 @@ pub async fn assign_policy_to_group(pool: &PgPool, group_id: Uuid, policy_id: Uu
 }
 
 /// Desasigna una política de un agente.
-pub async fn unassign_policy_from_agent(pool: &PgPool, agent_id: Uuid, policy_id: Uuid,) -> Result<(), DbError> {
+pub async fn unassign_policy_from_agent(
+    pool: &PgPool,
+    agent_id: Uuid,
+    policy_id: Uuid,
+) -> Result<(), DbError> {
     sqlx::query!(
         "DELETE FROM agent_policies WHERE agent_id = $1 AND policy_id = $2",
         agent_id,
@@ -204,7 +221,10 @@ pub async fn unassign_policy_from_agent(pool: &PgPool, agent_id: Uuid, policy_id
     Ok(())
 }
 
-async fn get_elements_for_policy(pool: &PgPool, policy_id: Uuid,) -> Result<Vec<PolicyElementRow>, DbError> {
+async fn get_elements_for_policy(
+    pool: &PgPool,
+    policy_id: Uuid,
+) -> Result<Vec<PolicyElementRow>, DbError> {
     sqlx::query_as!(
         PolicyElementRow,
         "SELECT id, policy_id, name FROM policy_elements WHERE policy_id = $1 ORDER BY id",
@@ -215,12 +235,15 @@ async fn get_elements_for_policy(pool: &PgPool, policy_id: Uuid,) -> Result<Vec<
     .map_err(DbError::Query)
 }
 
-async fn get_checks_for_policy(pool: &PgPool, policy_id: Uuid,) -> Result<Vec<PolicyCheckRow>, DbError> {
+async fn get_checks_for_policy(
+    pool: &PgPool,
+    policy_id: Uuid,
+) -> Result<Vec<PolicyCheckRow>, DbError> {
     sqlx::query_as!(
         PolicyCheckRow,
         r#"
         SELECT pc.id, pc.policy_element_id, pc.name, pc.rationale,
-               pc.check_command, pc.created_date
+               pc.check_params, pc.created_date
         FROM policy_checks pc
         INNER JOIN policy_elements pe ON pc.policy_element_id = pe.id
         WHERE pe.policy_id = $1
@@ -233,7 +256,10 @@ async fn get_checks_for_policy(pool: &PgPool, policy_id: Uuid,) -> Result<Vec<Po
     .map_err(DbError::Query)
 }
 
-async fn get_remediations_for_policy(pool: &PgPool, policy_id: Uuid,) -> Result<Vec<PolicyRemediationRow>, DbError> {
+async fn get_remediations_for_policy(
+    pool: &PgPool,
+    policy_id: Uuid,
+) -> Result<Vec<PolicyRemediationRow>, DbError> {
     sqlx::query_as!(
         PolicyRemediationRow,
         r#"
@@ -252,7 +278,10 @@ async fn get_remediations_for_policy(pool: &PgPool, policy_id: Uuid,) -> Result<
     .map_err(DbError::Query)
 }
 
-async fn get_regulation_sections_for_policy(pool: &PgPool, policy_id: Uuid,) -> Result<Vec<CheckRegulationSectionRow>, DbError> {
+async fn get_regulation_sections_for_policy(
+    pool: &PgPool,
+    policy_id: Uuid,
+) -> Result<Vec<CheckRegulationSectionRow>, DbError> {
     sqlx::query_as!(
         CheckRegulationSectionRow,
         r#"

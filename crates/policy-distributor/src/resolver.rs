@@ -196,8 +196,8 @@ fn db_bundle_to_proto(db_bundle: db_policies::PolicyBundle) -> Policy {
                     PolicyCheck {
                         id: c.id.to_string(),
                         name: c.name.clone(),
-                        check_type: check_type_from_json(&c.check_command),
-                        check_params_json: c.check_command.clone(),
+                        check_type: check_type_from_json(&c.check_params),
+                        check_params_json: c.check_params.clone(),
                         regulation_section_ids,
                         remediation,
                     }
@@ -221,9 +221,9 @@ fn db_bundle_to_proto(db_bundle: db_policies::PolicyBundle) -> Policy {
     }
 }
 
-/// Extrae el `type` del JSON de check_command.
+/// Extrae el `type` del JSON de check_params.
 ///
-/// El `check_command` en BD es el JSON completo con `type` y params. El agente espera `check_type`
+/// El `check_params` en BD es el JSON completo con `type` y params. El agente espera `check_type`
 /// y `check_params_json` separados en el proto. Aqui se extrae el tipo. El json completo va en
 /// `check_params_json`
 ///
