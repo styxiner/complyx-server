@@ -31,7 +31,8 @@ pub struct PolicyCheckRow {
     pub policy_element_id: Uuid,
     pub name: String,
     pub rationale: Option<String>,
-    pub check_params: String, // JSON con el tipo de check y sus parámetros
+    pub check_params: serde_json::Value, // JSON con el tipo de check y sus parámetros String ->
+    // serde_json::Value
     pub created_date: NaiveDateTime,
 }
 
@@ -41,7 +42,7 @@ pub struct PolicyRemediationRow {
     pub policy_check_id: Uuid,
     pub name: String,
     pub description: Option<String>,
-    pub remediation_command: String, // JSON con el tipo de remediación y sus parámetros
+    pub remediation_params: serde_json::Value, // JSON con el tipo de remediación y sus parámetros
     pub created_date: NaiveDateTime,
 }
 
@@ -264,7 +265,7 @@ async fn get_remediations_for_policy(
         PolicyRemediationRow,
         r#"
         SELECT pr.id, pr.policy_check_id, pr.name, pr.description,
-               pr.remediation_command, pr.created_date
+               pr.remediation_params, pr.created_date
         FROM policy_remediations pr
         INNER JOIN policy_checks pc ON pr.policy_check_id = pc.id
         INNER JOIN policy_elements pe ON pc.policy_element_id = pe.id

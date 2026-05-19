@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT pc.id, pc.policy_element_id, pc.name, pc.rationale,\n               pc.check_command, pc.created_date\n        FROM policy_checks pc\n        INNER JOIN policy_elements pe ON pc.policy_element_id = pe.id\n        WHERE pe.policy_id = $1\n        ORDER BY pe.id, pc.id\n        ",
+  "query": "\n        SELECT pc.id, pc.policy_element_id, pc.name, pc.rationale,\n               pc.check_params, pc.created_date\n        FROM policy_checks pc\n        INNER JOIN policy_elements pe ON pc.policy_element_id = pe.id\n        WHERE pe.policy_id = $1\n        ORDER BY pe.id, pc.id\n        ",
   "describe": {
     "columns": [
       {
@@ -25,8 +25,8 @@
       },
       {
         "ordinal": 4,
-        "name": "check_command",
-        "type_info": "Varchar"
+        "name": "check_params",
+        "type_info": "Jsonb"
       },
       {
         "ordinal": 5,
@@ -48,5 +48,5 @@
       false
     ]
   },
-  "hash": "51b9c131f34d88b281c98b685384b7fcb1a6b572a1ca81f25700292f61379d9d"
+  "hash": "683eadc65dc598b7d011416e18e4e44fd1bfd157f89d1bb8c493dd714b230ddb"
 }

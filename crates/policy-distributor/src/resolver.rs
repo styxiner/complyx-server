@@ -186,8 +186,10 @@ fn db_bundle_to_proto(db_bundle: db_policies::PolicyBundle) -> Policy {
                 .map(|c| {
                     let remediation = rem_by_check.get(&c.id).map(|r| PolicyRemediation {
                         id: r.id.to_string(),
-                        remediation_type: remediation_type_from_json(&r.remediation_command),
-                        remediation_params_json: r.remediation_command.clone(),
+                        remediation_type: remediation_type_from_json(
+                            &r.remediation_params.to_string(),
+                        ),
+                        remediation_params_json: r.remediation_params.to_string(),
                     });
 
                     let regulation_section_ids =
@@ -196,8 +198,8 @@ fn db_bundle_to_proto(db_bundle: db_policies::PolicyBundle) -> Policy {
                     PolicyCheck {
                         id: c.id.to_string(),
                         name: c.name.clone(),
-                        check_type: check_type_from_json(&c.check_params),
-                        check_params_json: c.check_params.clone(),
+                        check_type: check_type_from_json(&c.check_params.to_string()),
+                        check_params_json: c.check_params.clone().to_string(),
                         regulation_section_ids,
                         remediation,
                     }

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT pr.id, pr.policy_check_id, pr.name, pr.description,\n               pr.remediation_command, pr.created_date\n        FROM policy_remediations pr\n        INNER JOIN policy_checks pc ON pr.policy_check_id = pc.id\n        INNER JOIN policy_elements pe ON pc.policy_element_id = pe.id\n        WHERE pe.policy_id = $1\n        ORDER BY pc.id, pr.id\n        ",
+  "query": "\n        SELECT pr.id, pr.policy_check_id, pr.name, pr.description,\n               pr.remediation_params, pr.created_date\n        FROM policy_remediations pr\n        INNER JOIN policy_checks pc ON pr.policy_check_id = pc.id\n        INNER JOIN policy_elements pe ON pc.policy_element_id = pe.id\n        WHERE pe.policy_id = $1\n        ORDER BY pc.id, pr.id\n        ",
   "describe": {
     "columns": [
       {
@@ -25,8 +25,8 @@
       },
       {
         "ordinal": 4,
-        "name": "remediation_command",
-        "type_info": "Varchar"
+        "name": "remediation_params",
+        "type_info": "Jsonb"
       },
       {
         "ordinal": 5,
@@ -48,5 +48,5 @@
       false
     ]
   },
-  "hash": "b0813ddb69d1bfaf8e3499f9ee1669b88995f1d48d865ee01d58abab6d4fbf0d"
+  "hash": "981bc288e2119c267f302b2d0a7f5a3e9ac03147ee0ac779208dcffaedf4336c"
 }
