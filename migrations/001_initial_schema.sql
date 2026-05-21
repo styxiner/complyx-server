@@ -153,8 +153,8 @@ CREATE TABLE risks (
     agent_id UUID NOT NULL REFERENCES agents(id) ON DELETE CASCADE,
     impact NUMERIC(3,1) CHECK (impact >= 0 AND impact <= 10),
     probability NUMERIC(3,1) CHECK (probability >= 0 AND probability <= 10),
-    risk_level VARCHAR(20) CHECK (risk_level IN ('low', 'medium', 'high', 'critical')),
-    status VARCHAR(20) NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'accepted', 'transferred', 'closed')),
+    risk_level VARCHAR(20) CHECK (lower(risk_level) IN ('low', 'medium', 'high', 'critical')),
+    status VARCHAR(20) NOT NULL DEFAULT 'open' CHECK (lower(status) in ('open', 'accepted', 'transferred', 'closed', 'monitoring', 'mitigated')),
     created_date TIMESTAMP NOT NULL DEFAULT now(),
     review_date TIMESTAMP,
     acceptance_date TIMESTAMP
